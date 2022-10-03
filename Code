@@ -1,15 +1,17 @@
 Number_of_Topics = 3
 number_of_Words = 10
-fileName = 'Miquela.csv'
+fileName = 'Nonoouri.csv'
 
 
 
 
+from pydoc import visiblename
 import re
 import string
 import numpy as np
 import pandas as pd
 from pprint import pprint
+import pickle
 
 # Gensim
 import gensim
@@ -26,7 +28,7 @@ import importlib
 # Plotting tools
 import gensim
 import pyLDAvis
-import pyLDAvis.gensim_models  # don't skip this
+import pyLDAvis.gensim  # don't skip this
 import matplotlib.pyplot as plt
 #%matplotlib inline
 
@@ -40,7 +42,7 @@ warnings.filterwarnings("ignore",category=DeprecationWarning)
 # NLTK Stop words
 from nltk.corpus import stopwords
 stop_words = stopwords.words('english')
-stop_words.extend(['from', 'a', 's', 'an', 'the', 'has', 'and', 'or', 'is', 'are', 'have', 'so', "get", "go", 're', 'even'])
+stop_words.extend(['know', 'from', 'a', 's', 'an', 'the', 'has', 'and', 'or', 'is', 'are', 'have', 'so', "get", "go", 're', 'even'])
 
 #Import Dataset
 df = pd.read_csv(fileName , encoding='Windows-1252')
@@ -135,6 +137,7 @@ lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,
                                            id2word=id2word,
                                            num_topics=Number_of_Topics, 
                                            update_every=1,
+                                           random_state=100,
                                            chunksize=100,
                                            passes=20,
                                            alpha='auto',
@@ -187,6 +190,7 @@ def compute_coherence_values(dictionary, corpus, texts, limit, start=0, step=3):
                                            id2word=id2word,
                                            num_topics=num_topics, 
                                            update_every=1,
+                                           random_state=100,
                                            chunksize=100,
                                            passes=10,
                                            alpha='auto',
