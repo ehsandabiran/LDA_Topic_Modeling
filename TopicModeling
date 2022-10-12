@@ -1,6 +1,6 @@
 Number_of_Topics = 3
 number_of_Words = 10
-fileName = 'Nonoouri.csv'
+fileName = 'guggimon.csv'
 
 
 
@@ -28,7 +28,7 @@ import importlib
 # Plotting tools
 import gensim
 import pyLDAvis
-import pyLDAvis.gensim  # don't skip this
+#import pyLDAvis.gensim  # don't skip this
 import matplotlib.pyplot as plt
 #%matplotlib inline
 
@@ -45,7 +45,8 @@ stop_words = stopwords.words('english')
 stop_words.extend(['know', 'from', 'a', 's', 'an', 'the', 'has', 'and', 'or', 'is', 'are', 'have', 'so', "get", "go", 're', 'even'])
 
 #Import Dataset
-df = pd.read_csv(fileName , encoding='Windows-1252')
+#df = pd.read_csv(fileName , encoding='Windows-1252')
+df = pd.read_csv(fileName , encoding="utf8")
 df.head()
 
 
