@@ -1,7 +1,7 @@
 Number_of_Topics = 4
 number_of_Words = 17
 
-fileName = 'guggimon.csv'
+fileName = 'miquela.csv'
 
 
 
@@ -47,7 +47,7 @@ warnings.filterwarnings("ignore",category=DeprecationWarning)
 from nltk.corpus import stopwords
 stop_words = stopwords.words('english')
 
-new_stopwords = ["m", "s", "go", "on"]
+new_stopwords = ["get","m", "S", "s", "go", "on"]
 stop_words.extend(new_stopwords)
 
 #Import Dataset
@@ -78,6 +78,31 @@ pprint(data[:1])
 def sent_to_words(sentences):
     for sentence in sentences:
         yield(gensim.utils.simple_preprocess(str(sentence), deacc=True))  # deacc=True removes punctuations
+
+
+from spacy.lang.en import English
+parser = English()
+def tokenize(text):
+    lda_tokens = []
+    tokens = parser(text)
+    for token in tokens:
+        if token.orth_.isspace():
+            continue
+        elif token.like_url:
+            lda_tokens.append('URL')
+        elif token.orth_.startswith('@'):
+            lda_tokens.append('SCREEN_NAME')
+        else:
+            lda_tokens.append(token.lower_)
+    return lda_tokens
+def prepare_text_for_lda(text):
+    tokens = tokenize(text)
+    tokens = [token for token in tokens if len(token) > 4]
+    tokens = [token for token in tokens if token not in stop_words]
+    return tokens
+
+
+
 
 data_words = list(sent_to_words(data))
 
