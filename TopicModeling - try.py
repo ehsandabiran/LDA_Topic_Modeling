@@ -1,9 +1,7 @@
-Number_of_Topics = 4
-
+Number_of_Topics = 5
 number_of_Words = 20
-
-fileName = 'guggimon-.csv'
-
+fileName = 'guggimon.csv'
+Random_State =3
 
 
 
@@ -14,9 +12,6 @@ import numpy as np
 import pandas as pd
 from pprint import pprint
 import pickle
-
-
-
 
 # Gensim
 import gensim
@@ -44,13 +39,12 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 import warnings
 warnings.filterwarnings("ignore",category=DeprecationWarning)
 
-
 # NLTK Stop words
 from nltk.corpus import stopwords
 #stop_words = stopwords.words('english')
-#stop_words.extend(['know', 'from', 'a', "s", 'an', 'the', 'has', 'and', 'or', 'is', 'are', 'have', 'so', "get", "go", 're', 'even'])
+#stop_words.extend(['know', 'go', 'from', 'a', "s", 'an', 'the', 'has', 'and', 'or', 'is', 'are', 'have', 'so', "get", "go", 're', 'even'])
 # excluded =  "oh", "ax", "awfully", "om", "mg", "look", "looking", "looks", "know", "known","knows", "like", "liked", "likely","whos", "who's", "whose", "why", "why's", "wish", "top", "fire", "proud",
-stop_words = ["wait", "check", "guggimon", "dude","time", "know", "guggi", "guy", "dm", "divaaaa", "kinda", "mia_vesper", "xa","turbio", "lmao", "lot", "divaaaa", "loooove",       "0o", "0s", "3a", "3b", "3d", "6b", "6o", "a", "a1", "a2", "a3", "a4", "ab", "able", "about", "above", "abst", "ac", "accordance", "according", "accordingly",
+stop_words = ["0o", "0s", "3a", "3b", "3d", "6b", "6o", "a", "a1", "a2", "a3", "a4", "ab", "able", "about", "above", "abst", "ac", "accordance", "according", "accordingly",
 "across", "act", "actually", "ad", "added", "adj", "ae", "af", "affected", "affecting", "affects", "after", "afterwards", "ag", "again", "against", "ah", "ain", 
 "ain't", "aj", "al", "all", "allow", "allows", "almost", "alone", "along", "already", "also", "although", "always", "am", "among", "amongst", "amoungst", "amount", 
 "an", "and", "announce", "another", "any", "anybody", "anyhow", "anymore", "anyone", "anything", "anyway", "anyways", "anywhere", "ao", "ap", "apart", "apparently", 
@@ -108,12 +102,14 @@ df = pd.read_csv(fileName , encoding="utf8")
 df.head()
 
 
+
 # Convert to list
 data = df.values.tolist()
 
+
 '''
 # Remove Emails
-#data = [re.sub('\S*@\S*\s?', '', sent) for sent in data]
+data = [re.sub('\S*@\S*\s?', '', sent) for sent in data]
 
 # Remove new line characters
 data = [re.sub('\s+', ' ', sent) for sent in data]
@@ -124,38 +120,9 @@ data = [re.sub("\'", "", sent) for sent in data]
 pprint(data[:1])
 '''
 
-
-
-
-
 def sent_to_words(sentences):
     for sentence in sentences:
         yield(gensim.utils.simple_preprocess(str(sentence), deacc=True))  # deacc=True removes punctuations
-
-
-from spacy.lang.en import English
-parser = English()
-def tokenize(text):
-    lda_tokens = []
-    tokens = parser(text)
-    for token in tokens:
-        if token.orth_.isspace():
-            continue
-        elif token.like_url:
-            lda_tokens.append('URL')
-        elif token.orth_.startswith('@'):
-            lda_tokens.append('SCREEN_NAME')
-        else:
-            lda_tokens.append(token.lower_)
-    return lda_tokens
-def prepare_text_for_lda(text):
-    tokens = tokenize(text)
-    tokens = [token for token in tokens if len(token) > 4]
-    tokens = [token for token in tokens if token not in stop_words]
-    return tokens
-
-
-
 
 data_words = list(sent_to_words(data))
 
@@ -176,8 +143,6 @@ trigram_mod = gensim.models.phrases.Phraser(trigram)
 # Define functions for stopwords, bigrams, trigrams and lemmatization
 def remove_stopwords(texts):
     return [[words for words in simple_preprocess(str(doc)) if not words in stop_words] for doc in texts]
-
-
 
 def make_bigrams(texts):
     return [bigram_mod[doc] for doc in texts]
@@ -220,27 +185,86 @@ corpus = [id2word.doc2bow(text) for text in texts]
 # View
 ### print(corpus[:1])
 
-
-#for i in range(100):
-
-for i in range(100):
 # Build LDA model
-    lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,
-                                            id2word=id2word,
-                                            num_topics=Number_of_Topics, 
-                                            update_every=1,
-                                            random_state=i,
-                                            chunksize=100,
-                                            passes=20,
-                                            alpha='auto',
-                                            per_word_topics=True)
+lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,
+                                           id2word=id2word,
+                                           num_topics=Number_of_Topics, 
+                                           update_every=1,
+                                           chunksize=100,
+                                           passes=20,
+                                           alpha='auto',
+                                           per_word_topics=True)
 
-    # Print the Keyword in the 10 topics
-#print(lda_model.print_topics(num_words=number_of_Words))
 
-    model = lda_model.print_topics(num_words=number_of_Words)
-    
-    for x in range(Number_of_Topics):
-        print(model[x])
 
-    print("Random state = ", i)
+
+# Print the Keyword in the 10 topics
+pprint(lda_model.print_topics(num_words=number_of_Words))
+doc_lda = lda_model[corpus]
+
+
+# Compute Perplexity
+print('\nPerplexity: ', lda_model.log_perplexity(corpus))  # a measure of how good the model is. lower the better.
+
+
+
+# Compute Coherence Score
+if __name__ == "__main__":
+    coherence_model_lda = CoherenceModel(model=lda_model, texts=data_lemmatized, 
+                                                          dictionary=id2word, 
+                                                              coherence='c_v')
+    coherence_lda = coherence_model_lda.get_coherence()
+    print('\nCoherence Score: ', coherence_lda)
+
+
+
+
+def compute_coherence_values(dictionary, corpus, texts, limit, start=0, step=3):
+    """
+    Compute c_v coherence for various number of topics
+
+    Parameters:
+    ----------
+    dictionary : Gensim dictionary
+    corpus : Gensim corpus
+    texts : List of input texts
+    limit : Max num of topics
+
+    Returns:
+    -------
+    model_list : List of LDA topic models
+    coherence_values : Coherence values corresponding to the LDA model with respective number of topics
+    """
+    coherence_values = []
+    model_list = []
+    for num_topics in range(start, limit, step):
+        model = gensim.models.ldamodel.LdaModel(corpus=corpus,
+                                           id2word=id2word,
+                                           num_topics=num_topics, 
+                                           update_every=1,
+                                           random_state=Random_State,
+                                           chunksize=100,
+                                           passes=10,
+                                           alpha='auto',
+                                           per_word_topics=True)
+        model_list.append(model)
+        coherencemodel = CoherenceModel(model=model, texts=texts, dictionary=dictionary, coherence='c_v')
+        coherence_values.append(coherencemodel.get_coherence())
+
+    return model_list, coherence_values
+
+    # Can take a long time to run.
+model_list, coherence_values = compute_coherence_values(dictionary=id2word, corpus=corpus, texts=data_lemmatized, start=2, limit=40, step=6)
+
+
+# Show graph
+limit=40; start=2; step=6;
+x = range(start, limit, step)
+plt.plot(x, coherence_values)
+plt.xlabel("Num Topics")
+plt.ylabel("Coherence score")
+plt.legend(("coherence_values"), loc='best')
+plt.show()
+
+
+print("Random State = ", Random_State)
